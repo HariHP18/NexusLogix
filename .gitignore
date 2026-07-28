@@ -1,0 +1,20 @@
+# .NET / C#
+bin/
+obj/
+.vs/
+*.user
+*.suo
+appsettings.Development.json
+
+# Node / React Frontend
+node_modules/
+dist/
+build/
+.npm/
+*.log
+
+# IDEs & System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

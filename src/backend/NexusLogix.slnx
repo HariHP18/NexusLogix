@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Core/">
+    <Project Path="Core/NexusLogix.Application/NexusLogix.Application.csproj" />
+    <Project Path="Core/NexusLogix.Domain/NexusLogix.Domain.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="Infrastructure/NexusLogix.Infrastructure/NexusLogix.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Presentation/">
+    <Project Path="Presentation/NexusLogix.WebApi/NexusLogix.WebApi.csproj" />
+  </Folder>
+</Solution>

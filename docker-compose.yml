@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  # 1. MS SQL Database Container
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: nexuslogix-db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong(!)Password2026
+    ports:
+      - "1433:1433"
+    volumes:
+      - nexuslogix-sql-data:/var/opt/mssql
+    networks:
+      - nexuslogix-network
+
+  # 2. Backend .NET 10 Web API Container
+  backend-api:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: nexuslogix-backend
+    environment:
+      - ConnectionStrings__SqlDatabase=Server=database;Database=NexusLogixDb;User Id=sa;Password=YourStrong(!)Password2026;TrustServerCertificate=True;
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      - database
+    networks:
+      - nexuslogix-network
+
+  # 3. Frontend React + Nginx Container
+  frontend-ui:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: nexuslogix-frontend
+    networks:
+      - nexuslogix-network
+
+  # 4. YARP Reverse Proxy Gateway Container
+  gateway:
+    build:
+      context: ./src/gateway
+      dockerfile: Dockerfile
+    container_name: nexuslogix-gateway
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-api
+      - frontend-ui
+    networks:
+      - nexuslogix-network
+
+networks:
+  nexuslogix-network:
+    driver: bridge
+
+volumes:
+  nexuslogix-sql-data:
