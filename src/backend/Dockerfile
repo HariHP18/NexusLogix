@@ -1,26 +1,28 @@
-# --- STAGE 1: Build & Publish ---
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-env
-WORKDIR /app
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
 
-# Copy the project files explicitly to leverage Docker layer caching
-COPY Presentation/NexusLogix.WebApi/NexusLogix.WebApi.csproj ./Presentation/NexusLogix.WebApi/
-COPY Infrastructure/NexusLogix.Infrastructure/NexusLogix.Infrastructure.csproj ./Infrastructure/NexusLogix.Infrastructure/
+# Copy all .csproj files preserving directory structure for cached restoration
+COPY Core/NexusLogix.Domain/NexusLogix.Domain.csproj Core/NexusLogix.Domain/
+COPY Core/NexusLogix.Application/NexusLogix.Application.csproj Core/NexusLogix.Application/
+COPY Infrastructure/NexusLogix.Infrastructure/NexusLogix.Infrastructure.csproj Infrastructure/NexusLogix.Infrastructure/
+COPY Presentation/NexusLogix.WebApi/NexusLogix.WebApi.csproj Presentation/NexusLogix.WebApi/
 
-# Restore packages by targeting the WebApi project directly
+# Restore dependencies
 RUN dotnet restore Presentation/NexusLogix.WebApi/NexusLogix.WebApi.csproj
 
-# Copy the rest of the source code files
-COPY . ./
+# Copy the remaining backend source code and build
+COPY . .
+WORKDIR /src/Presentation/NexusLogix.WebApi
+RUN dotnet build NexusLogix.WebApi.csproj -c Release -o /app/build
 
-# Build and publish the production build
-RUN dotnet publish Presentation/NexusLogix.WebApi/NexusLogix.WebApi.csproj -c Release -o out
+# Publish stage
+FROM build AS publish
+RUN dotnet publish NexusLogix.WebApi.csproj -c Release -o /app/publish /p:UseAppHost=false
 
-# --- STAGE 2: Runtime ---
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-COPY --from=build-env /app/out .
-
-EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
-
+EXPOSE 80
+EXPOSE 443
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "NexusLogix.WebApi.dll"]

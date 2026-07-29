@@ -23,29 +23,29 @@ steps:
       inlineScript: |
         az acr login --name $(acrName)
 
-  # Build & Push Backend
+  # Build & Push Backend API (Context set to src/backend)
   - task: CmdLine@2
     displayName: "Build and Push Backend API"
     inputs:
       script: |
-        docker build -t $(acrServer)/nexuslogix-backend:$(Build.BuildId) -t $(acrServer)/nexuslogix-backend:latest -f src/backend/Dockerfile .
+        docker build -t $(acrServer)/nexuslogix-backend:$(Build.BuildId) -t $(acrServer)/nexuslogix-backend:latest -f src/backend/Dockerfile src/backend
         docker push $(acrServer)/nexuslogix-backend:$(Build.BuildId)
         docker push $(acrServer)/nexuslogix-backend:latest
 
-  # Build & Push Frontend
+  # Build & Push Frontend UI (Context set to src/frontend)
   - task: CmdLine@2
     displayName: "Build and Push Frontend UI"
     inputs:
       script: |
-        docker build -t $(acrServer)/nexuslogix-frontend:$(Build.BuildId) -t $(acrServer)/nexuslogix-frontend:latest -f src/frontend/Dockerfile .
+        docker build -t $(acrServer)/nexuslogix-frontend:$(Build.BuildId) -t $(acrServer)/nexuslogix-frontend:latest -f src/frontend/Dockerfile src/frontend
         docker push $(acrServer)/nexuslogix-frontend:$(Build.BuildId)
         docker push $(acrServer)/nexuslogix-frontend:latest
 
-  # Build & Push Gateway
+  # Build & Push Gateway (Context set to src/gateway)
   - task: CmdLine@2
     displayName: "Build and Push Gateway"
     inputs:
       script: |
-        docker build -t $(acrServer)/nexuslogix-gateway:$(Build.BuildId) -t $(acrServer)/nexuslogix-gateway:latest -f src/gateway/Dockerfile .
+        docker build -t $(acrServer)/nexuslogix-gateway:$(Build.BuildId) -t $(acrServer)/nexuslogix-gateway:latest -f src/gateway/Dockerfile src/gateway
         docker push $(acrServer)/nexuslogix-gateway:$(Build.BuildId)
         docker push $(acrServer)/nexuslogix-gateway:latest
