@@ -10,43 +10,42 @@ variables:
   azureServiceConnection: "azure-connection"
   resourceGroup: "rg-nexuslogix-prod"
   acrName: "acrnexuslogix5608"
+  acrServer: "acrnexuslogix5608.azurecr.io"
 
 steps:
+  # Log in to ACR via Azure CLI task
   - task: AzureCLI@2
-    displayName: "Build and Push Backend API to ACR"
+    displayName: "Authenticate with Azure Container Registry"
     inputs:
       azureSubscription: "$(azureServiceConnection)"
       scriptType: "bash"
       scriptLocation: "inlineScript"
       inlineScript: |
-        az acr build --registry $(acrName) \
-          --image nexuslogix-backend:$(Build.BuildId) \
-          --image nexuslogix-backend:latest \
-          -f src/backend/Dockerfile \
-          .
+        az acr login --name $(acrName)
 
-  - task: AzureCLI@2
-    displayName: "Build and Push Frontend UI to ACR"
+  # Build & Push Backend
+  - task: CmdLine@2
+    displayName: "Build and Push Backend API"
     inputs:
-      azureSubscription: "$(azureServiceConnection)"
-      scriptType: "bash"
-      scriptLocation: "inlineScript"
-      inlineScript: |
-        az acr build --registry $(acrName) \
-          --image nexuslogix-frontend:$(Build.BuildId) \
-          --image nexuslogix-frontend:latest \
-          -f src/frontend/Dockerfile \
-          .
+      script: |
+        docker build -t $(acrServer)/nexuslogix-backend:$(Build.BuildId) -t $(acrServer)/nexuslogix-backend:latest -f src/backend/Dockerfile .
+        docker push $(acrServer)/nexuslogix-backend:$(Build.BuildId)
+        docker push $(acrServer)/nexuslogix-backend:latest
 
-  - task: AzureCLI@2
-    displayName: "Build and Push Gateway to ACR"
+  # Build & Push Frontend
+  - task: CmdLine@2
+    displayName: "Build and Push Frontend UI"
     inputs:
-      azureSubscription: "$(azureServiceConnection)"
-      scriptType: "bash"
-      scriptLocation: "inlineScript"
-      inlineScript: |
-        az acr build --registry $(acrName) \
-          --image nexuslogix-gateway:$(Build.BuildId) \
-          --image nexuslogix-gateway:latest \
-          -f src/gateway/Dockerfile \
-          .
+      script: |
+        docker build -t $(acrServer)/nexuslogix-frontend:$(Build.BuildId) -t $(acrServer)/nexuslogix-frontend:latest -f src/frontend/Dockerfile .
+        docker push $(acrServer)/nexuslogix-frontend:$(Build.BuildId)
+        docker push $(acrServer)/nexuslogix-frontend:latest
+
+  # Build & Push Gateway
+  - task: CmdLine@2
+    displayName: "Build and Push Gateway"
+    inputs:
+      script: |
+        docker build -t $(acrServer)/nexuslogix-gateway:$(Build.BuildId) -t $(acrServer)/nexuslogix-gateway:latest -f src/gateway/Dockerfile .
+        docker push $(acrServer)/nexuslogix-gateway:$(Build.BuildId)
+        docker push $(acrServer)/nexuslogix-gateway:latest
