@@ -1,0 +1,49 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: "ubuntu-latest"
+
+variables:
+  azureServiceConnection: "azure-connection"
+  resourceGroup: "rg-nexuslogix-prod"
+  acrName: "acrnexuslogix5608"
+
+steps:
+  - task: AzureCLI@2
+    displayName: "Build and Push Backend API to ACR"
+    inputs:
+      azureSubscription: "$(azureServiceConnection)"
+      scriptType: "bash"
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        az acr build --registry $(acrName) \
+          --image nexuslogix-backend:$(Build.BuildId) \
+          --image nexuslogix-backend:latest \
+          -f src/backend/Presentation/NexusLogix.WebApi/Dockerfile src/backend
+
+  - task: AzureCLI@2
+    displayName: "Build and Push Frontend UI to ACR"
+    inputs:
+      azureSubscription: "$(azureServiceConnection)"
+      scriptType: "bash"
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        az acr build --registry $(acrName) \
+          --image nexuslogix-frontend:$(Build.BuildId) \
+          --image nexuslogix-frontend:latest \
+          -f src/frontend/Dockerfile src/frontend
+
+  - task: AzureCLI@2
+    displayName: "Build and Push Gateway to ACR"
+    inputs:
+      azureSubscription: "$(azureServiceConnection)"
+      scriptType: "bash"
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        az acr build --registry $(acrName) \
+          --image nexuslogix-gateway:$(Build.BuildId) \
+          --image nexuslogix-gateway:latest \
+          -f src/gateway/Dockerfile src/gateway
