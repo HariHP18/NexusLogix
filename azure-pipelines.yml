@@ -22,7 +22,8 @@ steps:
         az acr build --registry $(acrName) \
           --image nexuslogix-backend:$(Build.BuildId) \
           --image nexuslogix-backend:latest \
-          -f src/backend/Presentation/NexusLogix.WebApi/Dockerfile src/backend
+          -f Dockerfile \
+          src/backend
 
   - task: AzureCLI@2
     displayName: "Build and Push Frontend UI to ACR"
@@ -34,7 +35,8 @@ steps:
         az acr build --registry $(acrName) \
           --image nexuslogix-frontend:$(Build.BuildId) \
           --image nexuslogix-frontend:latest \
-          -f src/frontend/Dockerfile src/frontend
+          -f Dockerfile \
+          src/frontend
 
   - task: AzureCLI@2
     displayName: "Build and Push Gateway to ACR"
@@ -46,4 +48,5 @@ steps:
         az acr build --registry $(acrName) \
           --image nexuslogix-gateway:$(Build.BuildId) \
           --image nexuslogix-gateway:latest \
-          -f src/gateway/Dockerfile src/gateway
+          -f Dockerfile \
+          src/gateway
